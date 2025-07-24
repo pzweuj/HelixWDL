@@ -43,7 +43,7 @@ task DeepVariant {
 
     runtime {
         cpus: threads
-        singularity: "google/deepvariant:1.9.0"
+        container: "google/deepvariant:1.9.0"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
@@ -86,7 +86,7 @@ task DeepSomaticTumorOnly {
 
     runtime {
         cpus: threads
-        singularity: "google/deepsomatic:1.9.0"
+        container: "google/deepsomatic:1.9.0"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
@@ -132,7 +132,7 @@ task DeepSomaticPair {
 
     runtime {
         cpus: threads
-        singularity: "google/deepsomatic:1.9.0"
+        container: "google/deepsomatic:1.9.0"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
