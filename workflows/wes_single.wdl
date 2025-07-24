@@ -17,6 +17,12 @@ workflow WES_Single {
         BwaIndex reference
     }
 
+    # 质控
+    String qc_output_dir = output_dir + "/QC"
+    call utils_qc.Fastp as Fastp {input: sample_id=sample_id, output_dir=qc_output_dir, raw_read1=raw_read1, raw_read2=raw_read2, threads=threads}
+
+    # 比对
+    call utils_mapping.BwaMem2 as BwaMem2 {}
 
 
 

@@ -41,7 +41,7 @@ task Fastp {
     runtime {
         container: "ghcr.io/pzweuj/mapping:2025aug"
         binding: "~{output_dir}:~{output_dir}"
-        cpu: ~{fastp_threads}
+        cpus: ~{fastp_threads}
     }
 }
 

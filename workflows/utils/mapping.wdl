@@ -31,24 +31,49 @@ task BwaMem2 {
 
     output {
         File sort_bam = "~{output_dir}/~{sample_id}.sorted.bam"
-        File sort_bam_bai = "~{output_dir}/~{sample_id}.sorted.bam.bai"
+        File sort_bai = "~{output_dir}/~{sample_id}.sorted.bam.bai"
     }
 
     runtime {
         container: "ghcr.io/pzweuj/mapping:2025aug"
         binding: "~{output_dir}:~{output_dir}"
-        cpu: ~{threads}
+        cpus: ~{threads}
     }
 }
 
 ## MarkDuplicates
 ### https://github.com/broadinstitute/gatk
 task MarkDuplicates {
-    
+    input {
+        String sample_id
+        String output_dir
+        File bam
+        File bai
+        Int threads
+    }
 
+    command <<<
+        if [ ! -d ~{output_dir} ]; then
+            mkdir -p ~{output_dir}
+        fi
 
+        gatk MarkDuplicates \
+            -I ~{bam} \
+            -O ~{output_dir}/~{sample_id}.markdup.bam \
+            -M ~{output_dir}/~{sample_id}.metrics.txt \
+            --CREATE_INDEX true
+        mv ~{output_dir}/~{sample_id}.markdup.bai ~{output_dir}/~{sample_id}.markdup.bam.bai
+    >>>
 
+    output {
+        File mark_bam = "~{output_dir}/03_bam/~{sample_id}.markdup.bam"
+        File mark_bai = "~{output_dir}/03_bam/~{sample_id}.markdup.bam.bai"
+    }
 
+    runtime {
+        container: "broadinstitute/gatk:4.6.2.0"
+        binding: "~{output_dir}:~{output_dir}"
+        cpus: ~{threads}
+    }
 }
-
 
