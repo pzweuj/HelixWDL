@@ -7,13 +7,13 @@ import "struct.wdl"
 ### 直接从bam得到
 ### 线粒体是细胞质遗传，不遵循孟德尔定律，这里直接输出为vcf
 ### 参考 https://gatk.broadinstitute.org/hc/en-us/articles/4403870837275-Mitochondrial-short-variant-discovery-SNVs-Indels
-task MitoCalling {
+task Mutect2Mito {
     input {
         String sample_id
         String output_dir
         File bam
         File bai
-        GATKIndex reference
+        IndexBundle reference
         Int threads
     }
 
@@ -28,26 +28,28 @@ task MitoCalling {
             -L MT -L chrM \
             --mitochondria-mode \
             -I ~{bam} \
-            -O ~{output_dir}/~{sample_id}.mt.vcf.gz
+            -O ~{sample_id}.mt.raw.vcf.gz
 
         gatk FilterMutectCalls \
-            -V ~{output_dir}/~{sample_id}.mt.vcf.gz \
+            -V ~{sample_id}.mt.raw.vcf.gz \
             -R ~{reference.fasta} \
-            -O ~{output_dir}/~{sample_id}.mt.filtered.vcf.gz
+            -O ~{sample_id}.mt.filtered.vcf.gz
         
         gatk SelectVariants \
-            -V ~{output_dir}/~{sample_id}.mt.filtered.vcf.gz \
+            -V ~{sample_id}.mt.filtered.vcf.gz \
             --exclude-filtered true \
-            -O ~{output_dir}/~{sample_id}.mt.vcf
+            -O ~{output_dir}/~{sample_id}.mt.vcf.gz
     >>>
 
     output {
-        File vcf = "~{output_dir}/Mitochondrion/~{sample_id}.mt.vcf"
-        File idx = "~{output_dir}/Mitochondrion/~{sample_id}.mt.vcf.idx"
+        File vcf = "~{output_dir}/~{sample_id}.mt.vcf.gz"
+        File tbi = "~{output_dir}/~{sample_id}.mt.vcf.gz.tbi"
     }
 
     runtime {
         container: "broadinstitute/gatk:4.6.2.0"
         binding: "~{output_dir}:~{output_dir}"
+        cpus: ~{threads}
     }
 }
+
