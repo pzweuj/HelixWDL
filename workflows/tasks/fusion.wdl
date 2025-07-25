@@ -11,6 +11,7 @@ task MantaTumorOnly {
         File bai
         File reference
         Int threads
+        File bed
     }
 
     command <<<
@@ -18,12 +19,16 @@ task MantaTumorOnly {
             mkdir -p ~{output_dir}
         fi
 
+        bgzip ~{bed}
+        tabix -p bed ~{bed}.gz
+
         configManta.py \
             --tumorBam ~{bam} \
             --referenceFasta ~{reference} \
             --exome \
             --generateEvidenceBam \
-            --runDir .
+            --runDir . \
+            --callRegions ~{bed}.gz
         
         ./runWorkflow.py -j ~{threads}
 
@@ -52,6 +57,7 @@ task MantaPair {
         File normal_bai
         File reference
         Int threads
+        File bed
     }
 
     command <<<
@@ -59,13 +65,17 @@ task MantaPair {
             mkdir -p ~{output_dir}
         fi
 
+        bgzip ~{bed}
+        tabix -p bed ~{bed}.gz
+
         configManta.py \
             --tumorBam ~{bam} \
             --normalBam ~{normal_bam} \
             --referenceFasta ~{reference} \
             --exome \
             --generateEvidenceBam \
-            --runDir .
+            --runDir . \
+            --callRegions ~{bed}.gz
         
         ./runWorkflow.py -j ~{threads}
 
@@ -103,7 +113,7 @@ task TIDDIT {
         python tiddit --sv \
             -o ~{output_dir}/~{sample_id}.tiddit \
             --threads ~{threads} \
-            --bam ~{bam} --ref ~{reference}
+            --bam ~{bam} --ref ~{reference} -z 15
     >>>
 
     output {
