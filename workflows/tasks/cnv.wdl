@@ -75,12 +75,104 @@ task CNVkitTargetAndAntitarget {
     }
 }
 
+## 获得单个样本的coverage
+task CNVkitCoverage {
+    input {
+        String sample_id
+        String output_dir
+        File bam
+        File bai
+        File target_bed
+        File? antitarget_bed
+    }
 
+    command <<<
+        if [ ! -d ~{output_dir} ]; then
+            mkdir -p ~{output_dir}
+        fi
 
+        cnvkit.py coverage ~{bam} ~{target_bed} -o ~{output_dir}/~{sample_id}.targetcoverage.cnn
+        
+        ~{if defined(antitarget_bed) then 
+            "cnvkit.py coverage " + bam + " " + antitarget_bed + " -o " + output_dir + "/" + sample_id + ".antitargetcoverage.cnn"
+        else 
+            "touch " + output_dir + "/" + sample_id + ".antitargetcoverage.cnn"
+        }
+    >>>
 
+    output {
+        File target_coverage = "~{output_dir}/~{sample_id}.targetcoverage.cnn"
+        File antitarget_coverage = "~{output_dir}/~{sample_id}.antitargetcoverage.cnn"
+    }
 
+    runtime {
+        container: "ghcr.io/pzweuj/cnvkit:v0.9.11.p4"
+        binding: "~{output_dir}:~{output_dir}"
+    }
+}
 
+## 建立基线
+task CNVkitReference {
+    input {
+        String prefix
+        String coverage_dir
+        String output_dir
+        File reference
+    }
 
+    command <<<
+        if [ ! -d ~{output_dir} ]; then
+            mkdir -p ~{output_dir}
+        fi
 
+        cnvkit.py reference ~{coverage_dir}/*.{,anti}targetcoverage.cnn \
+            --fasta ~{reference} -o ~{output_dir}/~{prefix}.ref.cnn
+    >>>
 
+    output {
+        File ref_cnn = "~{output_dir}/~{prefix}.ref.cnn"
+    }
+
+    runtime {
+        container: "ghcr.io/pzweuj/cnvkit:v0.9.11.p4"
+        binding: "~{output_dir}:~{output_dir},~{coverage_dir}:~{coverage_dir}"
+    }
+}
+
+## 单样本的CNV分析
+task CNVkit {
+    input {
+        String sample_id
+        String output_dir
+        File target_cnn
+        File antitarget_cnn
+        File cnv_baseline
+        String method
+    }
+
+    command <<<
+        if [ ! -d ~{output_dir} ]; then
+            mkdir -p ~{output_dir}
+        fi
+
+        cnvkit.py fix ~{target_cnn} ~{antitarget_cnn} ~{cnv_baseline} -o ~{output_dir}/~{sample_id}.cnr
+        cnvkit.py segment ~{output_dir}/~{sample_id}.cnr -o ~{output_dir}/~{sample_id}.segment.cnr -m ~{method}
+        cnvkit.py call ~{output_dir}/~{sample_id}.cnr -o ~{output_dir}/~{sample_id}.cns
+        cnvkit.py call ~{output_dir}/~{sample_id}.segment.cnr -o ~{output_dir}/~{sample_id}.segment.cns
+        cnvkit.py scatter ~{output_dir}/~{sample_id}.cnr -s ~{output_dir}/~{sample_id}.cns -o ~{output_dir}/~{sample_id}.scatter.pdf
+        cnvkit.py diagram ~{output_dir}/~{sample_id}.cnr -s ~{output_dir}/~{sample_id}.cns -o ~{output_dir}/~{sample_id}.diagram.pdf
+    >>>
+
+    output {
+        File cns = "~{output_dir}/~{sample_id}.cns"
+        File seg_cns = "~{output_dir}/~{sample_id}.segment.cns"
+        File scatter_pdf = "~{output_dir}/~{sample_id}.scatter.pdf"
+        File diagram_pdf = "~{output_dir}/~{sample_id}.diagram.pdf"
+    }
+
+    runtime {
+        container: "ghcr.io/pzweuj/cnvkit:v0.9.11.p4"
+        binding: "~{output_dir}:~{output_dir}"
+    }
+}
 
