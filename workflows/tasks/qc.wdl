@@ -173,3 +173,74 @@ task CollectQCMetrics {
     }
 }
 
+### SRY计数
+task SRYCount {
+    input {
+        String sample_id
+        String output_dir
+        File fai
+        File bam
+        File bai
+    }
+
+    command <<<
+        if [ ! -d ~{output_dir} ]; then
+            mkdir -p ~{output_dir}
+        fi
+
+        # 检测Y染色体信息
+        y_info=$(awk '$1 ~ /^(chr)?Y$/ {print $1, $2}' ~{fai})
+        
+        if [ -z "$y_info" ]; then
+            echo "Error: Y chromosome not found in reference" >&2
+            exit 1
+        fi
+        
+        y_chr=$(echo $y_info | cut -d' ' -f1)
+        y_length=$(echo $y_info | cut -d' ' -f2)
+        
+        # 根据Y染色体长度判断基因组版本并设置SRY坐标
+        case $y_length in
+            57227415)
+                # hg38/GRCh38
+                sry_start=2786855
+                sry_end=2787682
+                genome_version="hg38"
+                ;;
+            59373566)
+                # hg19/GRCh37
+                sry_start=2654896
+                sry_end=2655723
+                genome_version="hg19"
+                ;;
+            *)
+                echo "Warning: Unknown genome version (Y length: $y_length), using hg19 coordinates" >&2
+                sry_start=2654896
+                sry_end=2655723
+                genome_version="unknown"
+                ;;
+        esac
+        
+        sry_region="${y_chr}:${sry_start}-${sry_end}"
+        
+        echo "Detected: $genome_version, Y chromosome: $y_chr, SRY region: $sry_region" >&2
+        
+        # 统计SRY区域的reads数量
+        sry_count=$(samtools view -F 2052 ~{bam} ${sry_region} | wc -l)
+        
+        # 输出结果，包含更多信息
+        echo -e "Sample\tGenome_Version\tY_Chromosome\tSRY_Region\tSRY_Count" > ~{output_dir}/~{sample_id}.SRY.txt
+        echo -e "~{sample_id}\t${genome_version}\t${y_chr}\t${sry_region}\t${sry_count}" >> ~{output_dir}/~{sample_id}.SRY.txt
+    >>>
+
+    output {
+        File sry_result = "~{output_dir}/~{sample_id}.SRY.txt"
+    }
+
+    runtime {
+        container: "ghcr.io/pzweuj/mapping:2025aug"
+        binding: "~{output_dir}:~{output_dir}"
+    }
+}
+
+
