@@ -5,6 +5,7 @@ import "./tasks/struct.wdl"
 import "./tasks/qc.wdl" as qc
 import "./tasks/mapping.wdl" as mapping
 import "./tasks/variant.wdl" as variant
+import "./tasks/mitochondrial.wdl" as mito
 
 workflow WES_Single {
     input {
@@ -28,8 +29,11 @@ workflow WES_Single {
     call mapping.BwaMem2 as BwaMem2 {input: sample_id=sample_id, output_dir=bam_output_dir, read1=Fastp.clean_read1, read2=Fastp.clean_read2, threads=threads, reference=reference}
     call mapping.MarkDuplicates as MarkDuplicates {input: sample_id=sample_id, output_dir=bam_output_dir, bam=BwaMem2.sort_bam, bai=BwaMem2.bai, threads=threads}
 
-    # 质量报告
-
+    # 质控2
+    call qc.Bamdst as Bamdst {input: sample_id=sample_id, output_dir=qc_output_dir, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, bed=bed}
+    call qc.Mosdepth as Mosdepth {input: sample_id=sample_id, output_dir=qc_output_dir, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, bed=bed, threads=4}
+    call qc.CollectQCMetrics as CollectQCMetrics {input: sample_id=sample_id, output_dir=qc_output_dir, reference=reference, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, bed=bed}
+    call qc.SRYCount as SRYCount {input: sample_id=sample_id, output_dir=qc_output_dir, fai=reference.fai, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai}
 
     # SNP/InDel
     String vcf_output_dir = output_dir + "/Vcf"
@@ -41,11 +45,18 @@ workflow WES_Single {
 
 
     # 线粒体
+    String mito_output_dir = output_dir + "/Mitochondrial"
+    call mito.Mutect2Mito as Mutect2Mito {input: sample_id=sample_id, output_dir=mito_output_dir, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, reference=reference, threads=threads}
+
+    # ROH
 
 
-    # 
+    # STR
 
+    # 输出结果文件
+    output {
 
+    }
 
 
 }
