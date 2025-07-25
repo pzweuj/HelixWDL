@@ -15,5 +15,7 @@ struct GATKIndex {
 
 struct IndexBundle {
     File fasta
+    File fai
+    File dict
     Array[File] index_file
 }
