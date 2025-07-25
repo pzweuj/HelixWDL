@@ -97,7 +97,7 @@ task Mosdepth {
         fi
 
         # 基本的深度统计
-        mosdepth \
+        mosdepth_d4 \
             --threads ~{threads} \
             ~{if defined(bed) then "--by " + bed else ""} \
             --no-per-base \
