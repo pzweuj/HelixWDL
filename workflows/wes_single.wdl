@@ -4,6 +4,7 @@ version 2.0
 import "./tasks/struct.wdl"
 import "./tasks/qc.wdl" as qc
 import "./tasks/mapping.wdl" as mapping
+import "./tasks/variant.wdl" as variant
 
 workflow WES_Single {
     input {
@@ -14,7 +15,8 @@ workflow WES_Single {
         Int threads
         File bed
         File cnv_baseline
-        BwaIndex reference
+        IndexBundle reference
+        Int flank
     }
 
     # 质控
@@ -30,8 +32,11 @@ workflow WES_Single {
 
 
     # SNP/InDel
-
-
+    String vcf_output_dir = output_dir + "/Vcf"
+    call variant.DeepVariant as DeepVariant {input: sample_id=sample_id, output_dir=vcf_output_dir, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, bed=bed, reference=reference, threads=threads, flank=flank}
+    call variant.LeftAlignAndTrimVariants as LeftAlignAndTrimVariants {input: sample_id=sample_id, output_dir=vcf_output_dir, vcf=DeepVariant.vcf, idx=DeepVariant.tbi, reference=reference}
+    call variant.WhatsHap as WhatsHap {input: sample_id=sample_id, output_dir=vcf_output_dir, vcf=LeftAlignAndTrimVariants.left_vcf, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, reference=reference}
+    
     # CNV
 
 

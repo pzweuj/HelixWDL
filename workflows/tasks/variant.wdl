@@ -12,7 +12,7 @@ task DeepVariant {
         File bam
         File bai
         File bed
-        BwaIndex reference
+        IndexBundle reference
         Int threads
         Int flank
     }
@@ -57,7 +57,7 @@ task DeepSomaticTumorOnly {
         File bam
         File bai
         File bed
-        BwaIndex reference
+        IndexBundle reference
         Int threads
     }
 
@@ -101,7 +101,7 @@ task DeepSomaticPair {
         File normal_bam
         File normal_bai
         File bed
-        BwaIndex reference
+        IndexBundle reference
         Int threads
     }
 
@@ -138,8 +138,90 @@ task DeepSomaticPair {
 }
 
 ## Mutect2
+### https://github.com/broadinstitute/gatk
+task Mutect2TumorOnly {
+
+}
 
 
+task Mutect2Pair {
 
+}
+
+## 左对齐
+### 用于将位点按照基因组坐标进行左对齐，并分拆多突变方向
+task LeftAlignAndTrimVariants {
+    input {
+        String sample_id
+        String output_dir
+        File vcf
+        File idx
+        IndexBundle reference
+    }
+
+    command <<<
+        if [ ! -d ~{output_dir} ]; then
+            mkdir -p ~{output_dir}
+        fi
+
+        gatk LeftAlignAndTrimVariants \
+            -R ~{reference.fasta} \
+            -V ~{vcf} \
+            -O ~{output_dir}/~{sample_id}.left.vcf.gz \
+            --split-multi-allelics \
+            --create-output-variant-index true
+    >>>
+
+    output {
+        File left_vcf = "~{output_dir}/~{sample_id}.left.vcf.gz"
+        File left_vcf_tbi = "~{output_dir}/~{sample_id}.left.vcf.gz.tbi"
+    }
+
+    runtime {
+        container: "broadinstitute/gatk:4.6.2.0"
+        binding: "~{output_dir}:~{output_dir}"
+    }
+}
+
+## 单倍型检查
+## WhatsHap
+### https://whatshap.readthedocs.io/en/latest/
+task WhatsHap {
+    input {
+        String sample_id
+        String output_dir
+        File vcf
+        File bam
+        File bai
+        IndexBundle reference
+    }
+
+    command <<<
+        if [ ! -d ~{output_dir} ]; then
+            mkdir -p ~{output_dir}
+        fi
+
+        whatshap phase \
+            --indels \
+            --reference=~{reference.fasta} \
+            -o ~{output_dir}/~{sample_id}.phase.vcf \
+            ~{vcf} \
+            ~{bam}
+        
+        bgzip ~{output_dir}/~{sample_id}.phase.vcf
+        tabix -f -p vcf ~{output_dir}/~{sample_id}.phase.vcf.gz
+    >>>
+
+    output {
+        File phase_vcf = "~{output_dir}/~{sample_id}.phase.vcf.gz"
+        File phase_vcf_tbi = "~{output_dir}/~{sample_id}.phase.vcf.gz.tbi"
+    }
+
+    runtime {
+        container: "fellen31/whatshap-tabix:2.2"
+        singularity_binding: "~{output_dir}:~{output_dir}"
+    }
+
+}
 
 

@@ -45,5 +45,131 @@ task Fastp {
     }
 }
 
+## Bamdst
+### https://github.com/shiquan/bamdst
+task Bamdst {
+    input {
+        String sample_id
+        String output_dir
+        File bam
+        File bai
+        File bed
+    }
 
+    command <<<
+        if [ ! -d ~{output_dir} ]; then
+            mkdir -p ~{output_dir}
+        fi
+
+        bamdst -p ~{target_bed} \
+            --cutoffdepth 20 \
+            -o ~{output_dir} ~{bam}
+    >>>
+
+    output {
+        File bamdst_cov_file = "~{output_dir}/coverage.report"
+        File bamdst_region_file = "~{output_dir}/region.tsv.gz"
+    }
+
+    runtime {
+        container: "ghcr.io/pzweuj/mapping:2025aug"
+        binding: "~{output_dir}:~{output_dir}"
+    }
+
+}
+
+## Mosdepth
+### https://github.com/brentp/mosdepth
+### 一般是WGS才用
+task Mosdepth {
+    input {
+        String sample_id
+        String output_dir
+        File bam
+        File bai
+        File? bed
+        Int threads = 4
+    }
+
+    command <<<
+        if [ ! -d ~{output_dir} ]; then
+            mkdir -p ~{output_dir}
+        fi
+
+        # 基本的深度统计
+        mosdepth \
+            --threads ~{threads} \
+            ~{if defined(bed) then "--by " + bed else ""} \
+            --no-per-base \
+            ~{output_dir}/~{sample_id} \
+            ~{bam}
+
+        # 生成全基因组深度统计（如果没有提供bed文件）
+        ~{if !defined(bed) then "mosdepth --threads " + threads + " --by 500 " + output_dir + "/" + sample_id + ".windows " + bam else ""}
+    >>>
+
+    output {
+        File mosdepth_summary = "~{output_dir}/~{sample_id}.mosdepth.summary.txt"
+        File? mosdepth_regions = if defined(bed) then "~{output_dir}/~{sample_id}.regions.bed.gz" else None
+        File? mosdepth_windows = if !defined(bed) then "~{output_dir}/~{sample_id}.windows.regions.bed.gz" else None
+        File mosdepth_dist = "~{output_dir}/~{sample_id}.mosdepth.global.dist.txt"
+    }
+
+    runtime {
+        container: "ghcr.io/pzweuj/mapping:2025aug"
+        binding: "~{output_dir}:~{output_dir}"
+        cpus: ~{threads}
+    }
+}
+
+## CollectQCMetrics
+task CollectQCMetrics {
+    input {
+        String sample_id
+        String output_dir
+        File bam
+        File bai
+        File bed
+        IndexBundle reference
+    }
+
+    command <<<
+        if [ ! -d ~{output_dir} ]; then
+            mkdir -p ~{output_dir}
+        fi
+
+        gatk CollectInsertSizeMetrics \
+            -I ~{bam} \
+            -O ~{output_dir}/~{sample_id}.insertsize.txt \
+            -H ~{output_dir}/~{sample_id}.histogram.pdf
+
+        gatk CollectAlignmentSummaryMetrics \
+            -I ~{bam} \
+            -R ~{reference.fasta} \
+            -O ~{output_dir}/~{sample_id}.align_summary.txt
+
+        gatk BedToIntervalList \
+            -I ~{bed} \
+            -O ~{sample_id}.interval_list \
+            -SD ~{reference.fasta}
+
+        gatk CollectHsMetrics \
+            -BI ~{sample_id}.interval_list \
+            -TI ~{sample_id}.interval_list \
+            -I ~{bam} \
+            -O ~{output_dir}/~{sample_id}.hs_metric.txt
+    >>>
+
+    output {
+        File insertsize_file = "~{output_dir}/~{sample_id}.insertsize.txt"
+        File insertsize_pdf = "~{output_dir}/~{sample_id}.histogram.pdf"
+        File align_summary = "~{output_dir}/~{sample_id}.align_summary.txt"
+        File hs_metric = "~{output_dir}/~{sample_id}.hs_metric.txt"
+    }
+
+    runtime {
+        container: "broadinstitute/gatk:4.6.2.0"
+        binding: "~{output_dir}:~{output_dir}"
+    }
+}
 
