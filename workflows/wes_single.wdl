@@ -6,6 +6,7 @@ import "./tasks/qc.wdl" as qc
 import "./tasks/mapping.wdl" as mapping
 import "./tasks/variant.wdl" as variant
 import "./tasks/mitochondrial.wdl" as mito
+import "./tasks/cnv.wdl" as cnv
 
 workflow WES_Single {
     input {
@@ -13,13 +14,13 @@ workflow WES_Single {
         String output_dir
         File raw_read1
         File raw_read2
-        Int threads
         File bed
-        File cnv_baseline
         IndexBundle reference
-        Int flank
-        String hpo
-        Boolean report
+        CnvBundle cnv_reference
+        Int threads = 16
+        Int flank = 20
+        String hpo = "HP:0000001"
+        Boolean report = false
     }
 
     # 质控
@@ -28,10 +29,10 @@ workflow WES_Single {
 
     # 比对
     String bam_output_dir = output_dir + "/Bam"
-    ## 优先使用Bwamem2，但小内存机器只能用bwa，注释对应的方案即可
+    ##### 优先使用Bwamem2，但小内存机器只能用bwa，注释对应的方案即可 #####
     # call mapping.BwaMem2 as Bwa {input: sample_id=sample_id, output_dir=bam_output_dir, read1=Fastp.clean_read1, read2=Fastp.clean_read2, threads=threads, reference=reference}
     call mapping.Bwa as Bwa {input: sample_id=sample_id, output_dir=bam_output_dir, read1=Fastp.clean_read1, read2=Fastp.clean_read2, threads=threads, reference=reference}
-    ##
+    ##################################################################
     call mapping.MarkDuplicates as MarkDuplicates {input: sample_id=sample_id, output_dir=bam_output_dir, bam=Bwa.sort_bam, bai=Bwa.bai, threads=threads}
 
     # 质控2
@@ -47,7 +48,9 @@ workflow WES_Single {
     call variant.WhatsHap as WhatsHap {input: sample_id=sample_id, output_dir=vcf_output_dir, vcf=LeftAlignAndTrimVariants.left_vcf, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, reference=reference}
     
     # CNV
-
+    String cnv_output_dir = output_dir + "/CNV"
+    call cnv.CNVkitCoverage as CNVkitCoverage {input: sample_id=sample_id, output_dir=cnv_output_dir, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, target_bed=cnv_reference.target_bed, antitarget_bed=cnv_reference.antitarget_bed}
+    call cnv.CNVkit as CNVkit {input: sample_id=sample_id, output_dir=cnv_output_dir, target_cnn=CNVkitCoverage.target_coverage, antitarget_cnn=CNVkitCoverage.antitarget_coverage, cnv_baseline=cnv_reference.baseline, method="germline-hmm"}
 
     # 线粒体
     String mito_output_dir = output_dir + "/Mitochondrial"
