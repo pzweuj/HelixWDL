@@ -19,3 +19,10 @@ struct IndexBundle {
     File dict
     Array[File] index_file
 }
+
+struct CnvBundle {
+    File target_bed
+    File antitarget_bed
+    File baseline
+}
+
