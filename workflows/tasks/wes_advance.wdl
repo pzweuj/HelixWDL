@@ -65,7 +65,7 @@ task ExpansionHunter {
 
     runtime {
         cpus: threads
-        container: "epansionhunter:test"
+        container: "docker.io/epansionhunter:test"
         binding: "~{output_dir}:~{output_dir}"
     }
 
@@ -104,7 +104,7 @@ task ROH {
     }
 
     runtime {
-        container: "automap_v1.3.p7.sif"
+        container: "ghcr.io/pzweuj/automap:v1.3.p7"
         binding: "~{output_dir}:~{output_dir}"
         cpus: 1
     }

@@ -168,7 +168,7 @@ task CollectQCMetrics {
     }
 
     runtime {
-        container: "broadinstitute/gatk:4.6.2.0"
+        container: "docker.io/broadinstitute/gatk:4.6.2.0"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
@@ -242,5 +242,8 @@ task SRYCount {
         binding: "~{output_dir}:~{output_dir}"
     }
 }
+
+## 整合的质控报告
+### 输出一个json文件
 
 

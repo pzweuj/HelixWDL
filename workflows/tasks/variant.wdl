@@ -43,7 +43,7 @@ task DeepVariant {
 
     runtime {
         cpus: threads
-        container: "google/deepvariant:1.9.0"
+        container: "docker.io/google/deepvariant:1.9.0"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
@@ -86,7 +86,7 @@ task DeepSomaticTumorOnly {
 
     runtime {
         cpus: threads
-        container: "google/deepsomatic:1.9.0"
+        container: "docker.io/google/deepsomatic:1.9.0"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
@@ -132,7 +132,7 @@ task DeepSomaticPair {
 
     runtime {
         cpus: threads
-        container: "google/deepsomatic:1.9.0"
+        container: "docker.io/google/deepsomatic:1.9.0"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
@@ -178,7 +178,7 @@ task LeftAlignAndTrimVariants {
     }
 
     runtime {
-        container: "broadinstitute/gatk:4.6.2.0"
+        container: "docker.io/broadinstitute/gatk:4.6.2.0"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
@@ -218,7 +218,7 @@ task WhatsHap {
     }
 
     runtime {
-        container: "fellen31/whatshap-tabix:2.2"
+        container: "docker.io/fellen31/whatshap-tabix:2.2"
         singularity_binding: "~{output_dir}:~{output_dir}"
     }
 

@@ -41,7 +41,7 @@ task MantaTumorOnly {
 
     runtime {
         cpus: threads
-        container: "dceoy/manta:latest"
+        container: "docker.io/dceoy/manta:latest"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
@@ -88,7 +88,7 @@ task MantaPair {
 
     runtime {
         cpus: threads
-        container: "dceoy/manta:latest"
+        container: "docker.io/dceoy/manta:latest"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
@@ -157,7 +157,7 @@ task SVDB {
     }
 
     runtime {
-        container: "clinicalgenomics/svdb:2.8.2"
+        container: "docker.io/clinicalgenomics/svdb:2.8.2"
         binding: "~{output_dir}:~{output_dir}"
     }
 }

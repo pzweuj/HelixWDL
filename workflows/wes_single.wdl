@@ -18,6 +18,8 @@ workflow WES_Single {
         File cnv_baseline
         IndexBundle reference
         Int flank
+        String hpo
+        Boolean report
     }
 
     # 质控
@@ -26,8 +28,11 @@ workflow WES_Single {
 
     # 比对
     String bam_output_dir = output_dir + "/Bam"
-    call mapping.BwaMem2 as BwaMem2 {input: sample_id=sample_id, output_dir=bam_output_dir, read1=Fastp.clean_read1, read2=Fastp.clean_read2, threads=threads, reference=reference}
-    call mapping.MarkDuplicates as MarkDuplicates {input: sample_id=sample_id, output_dir=bam_output_dir, bam=BwaMem2.sort_bam, bai=BwaMem2.bai, threads=threads}
+    ## 优先使用Bwamem2，但小内存机器只能用bwa，注释对应的方案即可
+    # call mapping.BwaMem2 as Bwa {input: sample_id=sample_id, output_dir=bam_output_dir, read1=Fastp.clean_read1, read2=Fastp.clean_read2, threads=threads, reference=reference}
+    call mapping.Bwa as Bwa {input: sample_id=sample_id, output_dir=bam_output_dir, read1=Fastp.clean_read1, read2=Fastp.clean_read2, threads=threads, reference=reference}
+    ##
+    call mapping.MarkDuplicates as MarkDuplicates {input: sample_id=sample_id, output_dir=bam_output_dir, bam=Bwa.sort_bam, bai=Bwa.bai, threads=threads}
 
     # 质控2
     call qc.Bamdst as Bamdst {input: sample_id=sample_id, output_dir=qc_output_dir, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, bed=bed}
@@ -52,6 +57,9 @@ workflow WES_Single {
 
 
     # STR
+
+    # 注释及报告
+
 
     # 输出结果文件
     output {

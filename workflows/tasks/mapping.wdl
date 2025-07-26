@@ -109,7 +109,7 @@ task MarkDuplicates {
     }
 
     runtime {
-        container: "broadinstitute/gatk:4.6.2.0"
+        container: "docker.io/broadinstitute/gatk:4.6.2.0"
         binding: "~{output_dir}:~{output_dir}"
         cpus: ~{threads}
     }
