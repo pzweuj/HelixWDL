@@ -176,3 +176,12 @@ task CNVkit {
     }
 }
 
+## CNV结果整理
+task CNVFormat {
+    input {
+        String sample_id
+        String output_dir
+        File cnvkit_cnr
+    }
+}
+
