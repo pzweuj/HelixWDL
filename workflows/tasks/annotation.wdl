@@ -21,10 +21,10 @@ task Exomiser {
 
         hpo_list_string=`awk '{printf "%s,", $0}' ~{hpo_list} | sed 's/,$//'`
 
-        # python3 ~{example_generate_script} -i ~{vcf} -o ~{output_dir}/06_annotation/exomiser/~{sample_id}.exomiser.yaml -x "${hpo_list_string}"
+        # python3 ~{example_generate_script} -i ~{vcf} -o ~{output_dir}/~{sample_id}.exomiser.yaml -x "${hpo_list_string}"
 
         java -jar /opt/exomiser-cli-14.0.1/exomiser-cli-14.0.1.jar \
-            --analysis ~{output_dir}/06_annotation/exomiser/~{sample_id}.exomiser.yaml \
+            --analysis ~{output_dir}/~{sample_id}.exomiser.yaml \
             --output-directory ~{output_dir} \
             --output-filename ~{sample_id} \
             --assembly ~{genome} \

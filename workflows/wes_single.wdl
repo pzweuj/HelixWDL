@@ -70,7 +70,9 @@ workflow WES_Single {
     call advance.ExpansionHunter {input: sample_id=sample_id, output_dir=str_output_dir, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, reference=reference.fasta, fai=reference.fai, threads=threads, sex=sex}
 
     # 注释及报告
-
+    if (report) {
+        echo "test"
+    }
 
     # 输出结果文件
     output {
