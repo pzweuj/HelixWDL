@@ -7,6 +7,7 @@ import "./tasks/mapping.wdl" as mapping
 import "./tasks/variant.wdl" as variant
 import "./tasks/mitochondrial.wdl" as mito
 import "./tasks/cnv.wdl" as cnv
+import "./tasks/wes_advance.wdl" as advance
 
 workflow WES_Single {
     input {
@@ -20,7 +21,9 @@ workflow WES_Single {
         Int threads = 16
         Int flank = 20
         String hpo = "HP:0000001"
+        String sex
         Boolean report = false
+        Boolean use_bwamem2 = true  # 默认使用BwaMem2，设为false使用Bwa
     }
 
     # 质控
@@ -29,10 +32,12 @@ workflow WES_Single {
 
     # 比对
     String bam_output_dir = output_dir + "/Bam"
-    ##### 优先使用Bwamem2，但小内存机器只能用bwa，注释对应的方案即可 #####
-    # call mapping.BwaMem2 as Bwa {input: sample_id=sample_id, output_dir=bam_output_dir, read1=Fastp.clean_read1, read2=Fastp.clean_read2, threads=threads, reference=reference}
-    call mapping.Bwa as Bwa {input: sample_id=sample_id, output_dir=bam_output_dir, read1=Fastp.clean_read1, read2=Fastp.clean_read2, threads=threads, reference=reference}
-    ##################################################################
+    if (use_bwamem2) {
+        call mapping.BwaMem2 as Bwa {input: sample_id=sample_id, output_dir=bam_output_dir, read1=Fastp.clean_read1, read2=Fastp.clean_read2, threads=threads, reference=reference}
+    }
+    if (!use_bwamem2) {
+        call mapping.Bwa as Bwa {input: sample_id=sample_id, output_dir=bam_output_dir, read1=Fastp.clean_read1, read2=Fastp.clean_read2, threads=threads, reference=reference}
+    }
     call mapping.MarkDuplicates as MarkDuplicates {input: sample_id=sample_id, output_dir=bam_output_dir, bam=Bwa.sort_bam, bai=Bwa.bai, threads=threads}
 
     # 质控2
@@ -57,9 +62,12 @@ workflow WES_Single {
     call mito.Mutect2Mito as Mutect2Mito {input: sample_id=sample_id, output_dir=mito_output_dir, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, reference=reference, threads=threads}
 
     # ROH
-
+    String roh_output_dir = output_dir + "/ROH"
+    call advance.ROH {input: sample_id=sample_id, output_dir=roh_output_dir, vcf=DeepVariant.vcf, fai=reference.fai}
 
     # STR
+    String str_output_dir = output_dir + "/STR"
+    call advance.ExpansionHunter {input: sample_id=sample_id, output_dir=str_output_dir, bam=MarkDuplicates.mark_bam, bai=MarkDuplicates.mark_bai, reference=reference.fasta, fai=reference.fai, threads=threads, sex=sex}
 
     # 注释及报告
 
