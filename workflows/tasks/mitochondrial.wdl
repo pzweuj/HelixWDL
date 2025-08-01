@@ -1,5 +1,6 @@
 version 2.0
 # 线粒体分析脚本
+# 注意VEP的版本格式不符合标准，应在拉取时通过tag重订格式
 
 import "struct.wdl"
 
@@ -92,7 +93,7 @@ task MitoVEP {
 
     runtime {
         cpus: threads
-        container: "docker.io/ensembl/vep:release_114.1"
+        container: "docker.io/ensemblorg/ensembl-vep:release_114.2"
         binding: "~{output_dir}:~{output_dir},~{vep_database}:~{vep_database},~{plugin_dir}:~{plugin_dir}"
     }
 }

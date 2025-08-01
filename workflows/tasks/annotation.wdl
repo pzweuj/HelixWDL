@@ -108,7 +108,7 @@ task VEP {
 
     runtime {
         cpus: threads
-        container: "docker.io/ensembl/vep:release_114.1"
+        container: "docker.io/ensemblorg/ensembl-vep:release_114.2"
         binding: "~{output_dir}:~{output_dir},~{vep_database}:~{vep_database},~{plugin_dir}:~{plugin_dir}"
     }
 }

@@ -122,7 +122,7 @@ task TIDDIT {
 
     runtime {
         cpus: threads
-        container: "quay.io/biocontainers/tiddit:3.9.3--py310h20b60a1_0"
+        container: "quay.io/biocontainers/tiddit/3.9.3--py312hc9302aa_0" # 需在拉取时重订格式
         binding: "~{output_dir}:~{output_dir}"
     }
 }
