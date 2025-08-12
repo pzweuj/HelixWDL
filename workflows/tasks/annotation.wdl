@@ -12,6 +12,8 @@ task Exomiser {
         File config_yaml
         File reference
         String genome
+        String data_version
+        String db_path
     }
 
     command <<<
@@ -21,14 +23,14 @@ task Exomiser {
 
         hpo_list_string=`awk '{printf "%s,", $0}' ~{hpo_list} | sed 's/,$//'`
 
-        # python3 ~{example_generate_script} -i ~{vcf} -o ~{output_dir}/~{sample_id}.exomiser.yaml -x "${hpo_list_string}"
-
-        java -jar /opt/exomiser-cli-14.0.1/exomiser-cli-14.0.1.jar \
-            --analysis ~{output_dir}/~{sample_id}.exomiser.yaml \
-            --output-directory ~{output_dir} \
-            --output-filename ~{sample_id} \
-            --assembly ~{genome} \
-            --spring.config.location=/opt//exomiser-cli-14.0.1/application.properties
+        /deploy/run_exomiser.sh \
+            --sample_id ~{sample_id} \
+            --vcf_file ~{vcf} \
+            --output_dir ~{output_dir} \
+            --genome ~{genome} \
+            --hpo_string $hpo_list_string \
+            --data_dir /data/exomiser \
+            --data_version ~{data_version}
     >>>
 
     output {
@@ -36,11 +38,10 @@ task Exomiser {
     }
 
     runtime {
-        container: "exomiser:v14.0.1"
-        binding: "~{output_dir}:~{output_dir}"
+        container: "ghcr.io/pzweuj/exomiser:v14.1.0"
+        binding: "~{output_dir}:~{output_dir},~{db_path}:/data/exomiser"
         cpus: 4
     }
-
 }
 
 # VEP
