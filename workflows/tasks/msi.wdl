@@ -24,7 +24,7 @@ task MSISensorProList {
     }
 
     runtime {
-        container: "ghcr.io/pzweuj/msi:v0.0.1"
+        container: "ghcr.io/pzweuj/msisensor-pro:v1.3.0"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
@@ -55,7 +55,7 @@ task MSISensorProBaseline {
     }
 
     runtime {
-        container: "ghcr.io/pzweuj/msi:v0.0.1"
+        container: "ghcr.io/pzweuj/msisensor-pro:v1.3.0"
         binding: "~{output_dir}:~{output_dir},~{input_dir}:~{input_dir}"
     }
 }
@@ -83,7 +83,7 @@ task MSISensorProTumorOnly {
     }
 
     runtime {
-        container: "ghcr.io/pzweuj/msi:v0.0.1"
+        container: "ghcr.io/pzweuj/msisensor-pro:v1.3.0"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
@@ -113,7 +113,7 @@ task MSISensorProPair {
     }
 
     runtime {
-        container: "ghcr.io/pzweuj/msi:v0.0.1"
+        container: "ghcr.io/pzweuj/msisensor-pro:v1.3.0"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
