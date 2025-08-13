@@ -8,6 +8,7 @@ task ManeBedIntersect {
         String output_dir
         File bed
         File mane_bed
+        Boolean use_chr = true
     }
 
     command <<<
@@ -15,11 +16,15 @@ task ManeBedIntersect {
             mkdir -p ~{output_dir}
         fi
 
-        python3 /opt/HelixWDL/scripts/mane_bed_intersect.py -i ~{bed} -m ~{mane_bed} -o ~{output_dir}/~{prefix}.cnv.bed
+        python3 /opt/HelixWDL/scripts/mane_bed_intersect.py \
+            -i ~{bed} \
+            -r ~{mane_bed} \
+            -o ~{output_dir}/~{prefix}.cnv.target.bed \
+            ~{if use_chr then "--chr" else ""}
     >>>
 
     output {
-        File cnv_bed = "~{output_dir}/~{prefix}.cnv.bed"
+        File cnv_bed = "~{output_dir}/~{prefix}.cnv.target.bed"
     }
 
     runtime {
@@ -54,8 +59,13 @@ task CNVkitTargetAndAntitarget {
             -x ~{exclude_bed} \
             -o ~{output_dir}/~{prefix}.access.bed
 
-        # 如果提供了refflat文件，则执行target步骤
-        ~{if defined(refflat) then "cnvkit.py target " + bed + " --annotate " + refflat + " -o " + output_dir + "/" + prefix + ".target.bed" else "cp " + bed + " " + output_dir + "/" + prefix + ".target.bed"}
+        # 如果提供了refflat文件，则执行target步骤；否则直接使用输入的bed文件作为target
+        if [ -n "~{refflat}" ]; then
+            cnvkit.py target ~{bed} --short-names --annotate ~{refflat} -o ~{output_dir}/~{prefix}.target.bed
+        else
+            # 当没有refflat文件时，直接将输入的bed文件重命名为target.bed供antitarget步骤使用
+            cp ~{bed} ~{output_dir}/~{prefix}.target.bed
+        fi
 
         # 生成antitarget文件
         cnvkit.py antitarget ~{output_dir}/~{prefix}.target.bed \
