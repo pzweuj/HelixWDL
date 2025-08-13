@@ -1,6 +1,6 @@
 version 2.0
 # CNV基线建立流程
-# 不使用refflat 使用
+# 不使用refflat进行注释
 # https://github.com/pzweuj/ManeSelectBed
 # 定义为外显子级别的CNV分析
 
