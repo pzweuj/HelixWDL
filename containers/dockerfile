@@ -9,6 +9,7 @@ ENV PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
+    python3-venv \
     git \
     curl \
     ca-certificates \
@@ -25,8 +26,8 @@ RUN apt-get update && apt-get install -y \
     tabix \
     && rm -rf /var/lib/apt/lists/*
 
-# 升级pip到最新版本
-RUN python3 -m pip install --upgrade pip
+# 升级pip到最新版本 (使用--break-system-packages绕过Ubuntu 24.04的限制)
+RUN python3 -m pip install --upgrade pip --break-system-packages
 
 # 创建工作目录
 RUN mkdir -p /opt
