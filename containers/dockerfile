@@ -41,7 +41,7 @@ WORKDIR /opt/HelixWDL
 # ============================================
 # 在此处添加你需要的Python库安装
 # 示例：
-RUN pip3 install numpy pandas openpyxl xlrd xlwt wordwriter
+RUN pip3 install numpy pandas openpyxl xlrd xlwt wordwriter --break-system-packages
 # RUN pip3 install your-package-name
 # ============================================
 
