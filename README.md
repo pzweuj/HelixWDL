@@ -4,6 +4,10 @@
   <p><strong>基于WDL语言的NGS分析流程，专注于临床肿瘤分析和遗传WES分析</strong></p>
 </div>
 
+## ⚠️ 注意 ⚠️
+
+项目处于快速迭代阶段，部分功能尚未完善，技术文档尚未更新，不建议用于临床分析。
+
 ## 项目概述
 
 HelixWDL是一个完全基于WDL构建的下一代测序(NGS)数据分析流程。项目采用容器化技术，使用公开数据库，确保所有用户都能够轻松复现和快速部署。
@@ -54,13 +58,15 @@ HelixWDL/
 │   └── tasks/                 # 任务模块
 ├── containers/                # Docker容器配置
 ├── cromwell_config/           # Cromwell配置文件
+├── scripts/                   # 辅助脚本
+├── inputs/                    # 输入文件目录
 ├── README.md                  # 项目说明文档
 └── LICENSE                    # 开源许可证
 ```
 
 ## 使用说明
 
-详细的部署和使用说明请参考项目Wiki文档。
+详细的部署和使用说明请参考项目[Wiki](https://github.com/pzweuj/HelixWDL/wiki)文档。
 
 ## 许可证
 
