@@ -116,5 +116,35 @@ task VEP {
 
 ## SNPEff
 ### 用于融合注释
+task SNPEff {
+    input {
+        String sample_id
+        File vcf
+        Int threads
+        String genome
+        String output_dir
+        String snpeff_database
+    }
 
+    command <<<
+        if [ ! -d ~{output_dir} ]; then
+            mkdir -p ~{output_dir}
+        fi
+
+        java -jar /snpeff/snpEff.jar \
+            -c /snpeff/snpEff.config \
+            -v ~{genome} \
+            ~{vcf} > ~{output_dir}/~{sample_id}.snpEff.anno.vcf
+    >>>
+
+    output {
+        File annoVcf = "~{output_dir}/~{sample_id}.snpEff.anno.vcf"
+    }
+
+    runtime {
+        cpus: threads
+        container: "docker.io/staphb/snpeff:5.2f"
+        binding: "~{output_dir}:~{output_dir},~{snpeff_database}:/snpeff/data"
+    }
+}
 
