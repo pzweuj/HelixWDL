@@ -28,7 +28,7 @@ task ManeBedIntersect {
     }
 
     runtime {
-        container: "ghcr.io/pzweuj/helixwdl:v0.0.1"
+        container: "ghcr.io/pzweuj/helixwdl:latest"
         binding: "~{output_dir}:~{output_dir}"
     }
 }
